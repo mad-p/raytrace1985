@@ -1,0 +1,870 @@
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-1
+
+
+
+ 	 	 	 	;
+ 	 	 	 	;
+ 	 	 	 	;     floating point package
+ 	 	 	 	;
+ 	 	 	 	;	by K.Maeda
+ 	 	 	 	;
+ 	 	 	 	
+ = 0000	 	 	 	@BIGMODEL	EQU	0
+ 	 	 	 	
+                             C	 	include	prologue.h
+                             C	;	prologue.h	11/5/83
+                             C	
+                             C	;	standard prologue for c86 assembly code
+                             C	
+                             C	;	DEFINE ARGUMENT BASE RELATIVE FROM BP
+                             C	
+                             C	ELSE
+ = 0004                      C	@AB	EQU	4
+                             C	ENDIF
+                             C	
+ 0000                        C	@CODE	SEGMENT WORD PUBLIC 'CODE'
+ 0000                        C	@CODE	ENDS
+ 0000                        C	@DATAB	SEGMENT WORD PUBLIC 'DATAB'
+ 0000                        C	@DATAB	ENDS
+ 0000                        C	@DATAC	SEGMENT WORD PUBLIC 'DATAC'
+ 0000                        C	@sb	label	byte
+ 0000                        C	@sw	label	word
+ 0000                        C	@DATAC	ENDS
+ 0000                        C	@DATAI	SEGMENT WORD PUBLIC 'DATAI'
+ 0000                        C	@ib	label	byte
+ 0000                        C	@iw	label	word
+ 0000                        C	@DATAI	ENDS
+ 0000                        C	@DATAT	SEGMENT WORD PUBLIC 'DATAT'
+ 0000                        C	@DATAT	ENDS
+ 0000                        C	@DATAU	SEGMENT WORD PUBLIC 'DATAU'
+ 0000                        C	@ub	label	byte
+ 0000                        C	@uw	label	word
+ 0000                        C	@DATAU	ENDS
+ 0000                        C	@DATAV	SEGMENT WORD PUBLIC 'DATAV'
+ 0000                        C	@DATAV	ENDS
+                             C	DGROUP	GROUP	@DATAB,@DATAC,@DATAI,@DATAT,@DA
+	 	 	 	TAU,@DATAV
+ 0000                        C	@CODE	SEGMENT WORD PUBLIC 'CODE'
+                             C	 	ASSUME	CS:@CODE,DS:DGROUP
+                             C	
+                             C	;	END OF PROLOGUE.h
+ 	 	 	 	
+ 	 	 	 	
+ 0000	 	 	 	@code	ends
+ 	 	 	 	
+ = 0021	 	 	 	BDOS	equ	21h
+ 	 	 	 	
+ 	 	 	 	REAL	struc
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-2
+
+
+
+ 	 	 	 	
+ 0000  ??	 	 	EXP	db	?
+ 0001  ??	 	 	SIGN	db	?
+ 0002  ????	 	 	MAN	dw	?
+ 	 	 	 	
+ 0004	 	 	 	REAL	ends
+ 	 	 	 	
+ 0000	 	 	 	@datac	segment
+ 	 	 	 	
+ 	 	 	 	 	public	DATASEG
+ 	 	 	 	 	public	LOGTBL
+ 	 	 	 	 	public	EXPTBL
+ 	 	 	 	
+ 0000	 	 	 	SEGLOG	segment word public 'LOGTB'
+ 0000	 	 	 	SEGLOG	ends
+ 0000	 	 	 	SEGEXP	segment word public 'EXPTB'
+ 0000	 	 	 	SEGEXP	ends
+ 	 	 	 	
+ 0000  ---- R	 	 	DATASEG	dw	SEG DGROUP
+ 0002  ---- R	 	 	LOGTBL	dw	SEG SEGLOG
+ 0004  ---- R	 	 	EXPTBL	dw	SEG SEGEXP
+ 	 	 	 	
+ 0006	 	 	 	@datac	ends
+ 	 	 	 	
+ 0000	 	 	 	@code	segment
+ 	 	 	 	
+ 	 	 	 	 	public	INTER
+ 	 	 	 	 	public	FADD
+ 	 	 	 	 	public	FSUB
+ 	 	 	 	 	public	FMLT
+ 	 	 	 	 	public	FCMLT
+ 	 	 	 	 	public	FDIV
+ 	 	 	 	 	public	FCOMP
+ 	 	 	 	 	public	FSQAR
+ 	 	 	 	 	public	FSQRT
+ 	 	 	 	 	public	FSCALE
+ 	 	 	 	 	public	FINV
+ 	 	 	 	 	public	FLOG
+ 	 	 	 	 	public	FEXP
+ 	 	 	 	 	public	ITOR
+ 	 	 	 	 	public	RTOI
+ 	 	 	 	 	public	RTOIF
+ 	 	 	 	
+ 0000	 	 	 	INTER	PROC	near
+ 	 	 	 	
+ 0000  55	 	 	 	push	bp
+ 0001  8B EC	 	 	 	mov	bp,sp
+ 0003  06	 	 	 	push	es
+ 0004  8B 76 06	 	 	 	mov	si,word ptr 6[bp]
+ 0007  8B 5E 08	 	 	 	mov	bx,word ptr 8[bp]
+ 000A  8B C3	 	 	 	mov	ax,bx
+ 000C  8B 7E 0A	 	 	 	mov	di,word ptr 10[bp]
+ 000F  FF 56 04	 	 	 	call	ss:word ptr 4[bp]
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-3
+
+
+
+ 0012  07	 	 	 	pop	es
+ 0013  5D	 	 	 	pop	bp
+ 0014  9C	 	 	 	pushf
+ 0015  5A	 	 	 	pop	dx
+ 0016  C3	 	 	 	ret
+ 	 	 	 	
+ 0017	 	 	 	INTER	ENDP
+ 	 	 	 	
+ 0017	 	 	 	FMLT	PROC	near
+ 	 	 	 	
+ 0017  52	 	 	 	push	dx
+ 0018  8A 44 03	 	 	 	mov	al,byte ptr [si].MAN+1
+ 001B  22 47 03	 	 	 	and	al,byte ptr [bx].MAN+1
+ 001E  79 49	 	 	 	jns	MLT0
+ 0020  8B 7F 02	 	 	 	mov	di,[bx].MAN
+ 0023  D1 E7	 	 	 	shl	di,1
+ 0025  A1 0002 R	 	 	mov	ax,LOGTBL
+ 0028  8E C0	 	 	 	mov	es,ax
+ 002A  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 002D  8A 6F 01	 	 	FMLTX:	mov	ch,[bx].SIGN
+ 0030  30 6C 01	 	 	 	xor	[si].SIGN,ch
+ 0033  8A 2C	 	 	 	mov	ch,[si].EXP
+ 0035  02 2F	 	 	 	add	ch,[bx].EXP
+ 0037  70 2E	 	 	 	jo	MLT1
+ 0039  8B 7C 02	 	 	 	mov	di,[si].MAN
+ 003C  D1 E7	 	 	 	shl	di,1
+ 003E  26: 03 15	 	 	add	dx,es:word ptr [di]
+ 0041  80 D5 00	 	 	 	adc	ch,0
+ 0044  70 2C	 	 	 	jo	MLT99
+ 0046  42	 	 	 	inc	dx
+ 0047  75 09	 	 	 	jnz	MLT100
+ 0049  BA 8000	 	 	 	mov	dx,8000h
+ 004C  FE C5	 	 	 	inc	ch
+ 004E  70 22	 	 	 	jo	MLT99
+ 0050  EB 0E	 	 	 	jmp	short	MLT98
+ 0052  81 E2 FFFE	 	MLT100:	and	dx,0fffeh
+ 0056  8B FA	 	 	 	mov	di,dx
+ 0058  A1 0004 R	 	 	mov	ax,EXPTBL
+ 005B  8E C0	 	 	 	mov	es,ax
+ 005D  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 0060  89 54 02	 	 	MLT98:	mov	[si].MAN,dx
+ 0063  88 2C	 	 	 	mov	[si].EXP,ch
+ 0065  5A	 	 	 	pop	dx
+ 0066  C3	 	 	 	ret
+ 	 	 	 	
+ 0067  7F 09	 	 	MLT1:	jg	MLT99
+ 0069  33 C0	 	 	MLT0:	xor	ax,ax
+ 006B  89 44 02	 	 	 	mov	[si].MAN,ax
+ 006E  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 0070  5A	 	 	 	pop	dx
+ 0071  C3	 	 	 	ret
+ 	 	 	 	
+ 0072  C7 44 02 FFFF	 	MLT99:	mov	[si].MAN,0ffffh
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-4
+
+
+
+ 0077  C6 04 7F	 	 	 	mov	[si].EXP,7fh
+ 007A  5A	 	 	 	pop	dx
+ 007B  C3	 	 	 	ret
+ 	 	 	 	
+ 007C	 	 	 	FCMLT	PROC	near
+ 	 	 	 	
+ 007C  52	 	 	 	push	dx
+ 007D  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 0081  74 E6	 	 	 	jz	MLT0
+ 0083  A1 0002 R	 	 	mov	ax,LOGTBL
+ 0086  8E C0	 	 	 	mov	es,ax
+ 0088  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 008B  8B 57 02	 	 	 	mov	dx,[bx].MAN
+ 008E  EB 9D	 	 	 	jmp	FMLTX
+ 	 	 	 	
+ 0090	 	 	 	FCMLT	ENDP
+ 	 	 	 	
+ 0090	 	 	 	FMLT	ENDP
+ 	 	 	 	
+ 	 	 	 	
+ 0090	 	 	 	FDIV	PROC	near
+ 	 	 	 	
+ 0090  52	 	 	 	push	dx
+ 0091  8A 47 01	 	 	 	mov	al,[bx].SIGN
+ 0094  30 44 01	 	 	 	xor	[si].SIGN,al
+ 0097  F6 47 03 80	 	 	test	byte ptr [bx].MAN+1,80h
+ 009B  74 52	 	 	 	jz	DIVERR
+ 009D  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 00A1  74 43	 	 	 	jz	DIV0
+ 00A3  8A 2C	 	 	 	mov	ch,[si].EXP
+ 00A5  2A 2F	 	 	 	sub	ch,[bx].EXP
+ 00A7  70 3B	 	 	 	jo	DIV1
+ 00A9  8B 7C 02	 	 	 	mov	di,[si].MAN
+ 00AC  D1 E7	 	 	 	shl	di,1
+ 00AE  A1 0002 R	 	 	mov	ax,LOGTBL
+ 00B1  8E C0	 	 	 	mov	es,ax
+ 00B3  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 00B6  8B 7F 02	 	 	 	mov	di,[bx].MAN
+ 00B9  D1 E7	 	 	 	shl	di,1
+ 00BB  26: 2B 15	 	 	sub	dx,es:word ptr [di]
+ 00BE  80 DD 00	 	 	 	sbb	ch,0
+ 00C1  70 23	 	 	 	jo	DIV0
+ 00C3  42	 	 	 	inc	dx
+ 00C4  75 09	 	 	 	jnz	DIV100
+ 00C6  BA 8000	 	 	 	mov	dx,8000h
+ 00C9  FE C5	 	 	 	inc	ch
+ 00CB  70 29	 	 	 	jo	DIV99
+ 00CD  EB 0E	 	 	 	jmp	short	DIV98
+ 00CF  81 E2 FFFE	 	DIV100:	and	dx,0fffeh
+ 00D3  8B FA	 	 	 	mov	di,dx
+ 00D5  A1 0004 R	 	 	mov	ax,EXPTBL
+ 00D8  8E C0	 	 	 	mov	es,ax
+ 00DA  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-5
+
+
+
+ 00DD  89 54 02	 	 	DIV98:	mov	[si].MAN,dx
+ 00E0  88 2C	 	 	 	mov	[si].EXP,ch
+ 00E2  5A	 	 	 	pop	dx
+ 00E3  C3	 	 	 	ret
+ 	 	 	 	
+ 00E4  7F 10	 	 	DIV1:	jg	DIV99
+ 00E6  33 C0	 	 	DIV0:	xor	ax,ax
+ 00E8  89 44 02	 	 	 	mov	[si].MAN,ax
+ 00EB  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 00ED  5A	 	 	 	pop	dx
+ 00EE  C3	 	 	 	ret
+ 	 	 	 	
+ 00EF  BA 0000 R	 	DIVERR:	mov	dx,offset DGROUP:D0MSG
+ 00F2  B4 09	 	 	 	mov	ah,9
+ 00F4  CD 21	 	 	 	int	BDOS
+ 00F6  C7 44 02 FFFF	 	DIV99:	mov	[si].MAN,0ffffh
+ 00FB  C6 04 7F	 	 	 	mov	[si].EXP,7fh
+ 00FE  5A	 	 	 	pop	dx
+ 00FF  C3	 	 	 	ret
+ 	 	 	 	
+ 0100	 	 	 	FINV	PROC	near
+ 	 	 	 	
+ 0100  52	 	 	 	push	dx
+ 0101  8B 54 02	 	 	 	mov	dx,[si].MAN
+ 0104  F6 C6 80	 	 	 	test	dh,80h
+ 0107  74 E6	 	 	 	je	DIVERR
+ 0109  F6 1C	 	 	 	neg	[si].EXP
+ 010B  70 2C	 	 	 	jo	INV99
+ 010D  A1 0002 R	 	 	mov	ax,LOGTBL
+ 0110  8E C0	 	 	 	mov	es,ax
+ 0112  8B FA	 	 	 	mov	di,dx
+ 0114  D1 E7	 	 	 	shl	di,1
+ 0116  26: 8B 3D	 	 	mov	di,es:word ptr [di]
+ 0119  F7 DF	 	 	 	neg	di
+ 011B  80 1C 00	 	 	 	sbb	[si].EXP,0
+ 011E  47	 	 	 	inc	di
+ 011F  75 07	 	 	 	jnz	INV1
+ 0121  BA 8000	 	 	 	mov	dx,8000h
+ 0124  FE 04	 	 	 	inc	[si].EXP
+ 0126  EB 0C	 	 	 	jmp	short	INV98
+ 0128  81 E7 FFFE	 	INV1:	and	di,0fffeh
+ 012C  A1 0004 R	 	 	mov	ax,EXPTBL
+ 012F  8E C0	 	 	 	mov	es,ax
+ 0131  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 0134  89 54 02	 	 	INV98:	mov	[si].MAN,dx
+ 0137  5A	 	 	 	pop	dx
+ 0138  C3	 	 	 	ret
+ 0139  C7 44 02 FFFF	 	INV99:	mov	[si].MAN,0ffffh
+ 013E  C6 04 7F	 	 	 	mov	[si].EXP,7fh
+ 0141  5A	 	 	 	pop	dx
+ 0142  C3	 	 	 	ret
+ 	 	 	 	
+ 0143	 	 	 	FINV	ENDP
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-6
+
+
+
+ 	 	 	 	
+ 0143	 	 	 	FDIV	ENDP
+ 	 	 	 	
+ 0143	 	 	 	@code	ENDS
+ 	 	 	 	
+ 0000	 	 	 	@datab	segment
+ 	 	 	 	
+ 0000  44 69 76 69 73 69	D0MSG	db	'Division by ZERO !!$'
+       6F 6E 20 62 79 20	
+       5A 45 52 4F 20 21	
+       21 24	 	 	
+ 	 	 	 	
+ 0014	 	 	 	@datab	ENDS
+ 	 	 	 	
+ 0143	 	 	 	@code	segment
+ 	 	 	 	
+ 0143	 	 	 	FSQRT	PROC	near
+ 	 	 	 	
+ 0143  52	 	 	 	push	dx
+ 0144  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 0148  74 32	 	 	 	jz	sqrt99
+ 014A  8A 2C	 	 	 	mov	ch,[si].EXP
+ 014C  8B 7C 02	 	 	 	mov	di,[si].MAN
+ 014F  D1 E7	 	 	 	shl	di,1
+ 0151  A1 0002 R	 	 	mov	ax,LOGTBL
+ 0154  8E C0	 	 	 	mov	es,ax
+ 0156  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 0159  D0 FD	 	 	 	sar	ch,1
+ 015B  D1 DA	 	 	 	rcr	dx,1
+ 015D  42	 	 	 	inc	dx
+ 015E  75 09	 	 	 	jnz	SQRT10
+ 0160  BA 8000	 	 	 	mov	dx,8000h
+ 0163  FE C5	 	 	 	inc	ch
+ 0165  70 15	 	 	 	jo	SQRT99
+ 0167  EB 0E	 	 	 	jmp	short	SQRT98	
+ 0169  81 E2 FFFE	 	SQRT10:	and	dx,0fffeh
+ 016D  8B FA	 	 	 	mov	di,dx
+ 016F  A1 0004 R	 	 	mov	ax,EXPTBL
+ 0172  8E C0	 	 	 	mov	es,ax
+ 0174  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 0177  89 54 02	 	 	SQRT98:	mov	[si].MAN,dx
+ 017A  88 2C	 	 	 	mov	[si].EXP,ch
+ 017C  5A	 	 	SQRT99:	pop	dx
+ 017D  C3	 	 	 	ret
+ 	 	 	 	
+ 017E	 	 	 	FSQRT	ENDP
+ 	 	 	 	
+ 017E	 	 	 	FSQAR	PROC	near
+ 	 	 	 	
+ 017E  52	 	 	 	push	dx
+ 017F  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 0183  74 42	 	 	 	jz	SQAR999
+ 0185  8B 7C 02	 	 	 	mov	di,[si].MAN
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-7
+
+
+
+ 0188  D1 E7	 	 	 	shl	di,1
+ 018A  A1 0002 R	 	 	mov	ax,LOGTBL
+ 018D  8E C0	 	 	 	mov	es,ax
+ 018F  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 0192  D1 E2	 	 	 	shl	dx,1
+ 0194  8A 2C	 	 	 	mov	ch,[si].EXP
+ 0196  12 ED	 	 	 	adc	ch,ch
+ 0198  70 19	 	 	 	jo	SQAR1
+ 019A  81 E2 FFFE	 	 	and	dx,0fffeh
+ 019E  8B FA	 	 	 	mov	di,dx
+ 01A0  A1 0004 R	 	 	mov	ax,EXPTBL
+ 01A3  8E C0	 	 	 	mov	es,ax
+ 01A5  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 01A8  89 54 02	 	 	SQAR98:	mov	[si].MAN,dx
+ 01AB  C6 44 01 00	 	 	mov	[si].SIGN,0
+ 01AF  88 2C	 	 	 	mov	[si].EXP,ch
+ 01B1  5A	 	 	 	pop	dx
+ 01B2  C3	 	 	 	ret
+ 01B3  7F 09	 	 	SQAR1:	jg	SQAR99
+ 01B5  33 C0	 	 	 	xor	ax,ax
+ 01B7  89 44 02	 	 	 	mov	[si].MAN,ax
+ 01BA  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 01BC  5A	 	 	 	pop	dx
+ 01BD  C3	 	 	 	ret
+ 01BE  C7 44 02 FFFF	 	SQAR99:	mov	[si].MAN,0ffffh
+ 01C3  C7 04 007F	 	 	mov	word ptr [si].EXP,7fh
+ 01C7  5A	 	 	SQAR999:pop	dx
+ 01C8  C3	 	 	 	ret
+ 	 	 	 	
+ 01C9	 	 	 	FSQAR	ENDP
+ 	 	 	 	
+ 01C9	 	 	 	FSUB	PROC	near
+ 	 	 	 	
+ 01C9  80 77 01 01	 	 	xor	[bx].SIGN,1
+ 01CD  E8 01D5 R	 	 	call	FADD
+ 01D0  80 77 01 01	 	 	xor	[bx].SIGN,1
+ 01D4  C3	 	 	 	ret
+ 	 	 	 	
+ 01D5	 	 	 	FSUB	ENDP
+ 	 	 	 	
+ 01D5	 	 	 	FADD	PROC	near
+ 	 	 	 	
+ 01D5  52	 	 	 	push	dx
+ 01D6  53	 	 	 	push	bx
+ 01D7  56	 	 	 	push	si
+ 01D8  F6 47 03 80	 	 	test	byte ptr [bx].MAN+1,80h
+ 01DC  74 52	 	 	 	jz	ADD2
+ 01DE  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 01E2  75 04	 	 	 	jnz	ADD100
+ 01E4  87 DE	 	 	 	xchg	bx,si
+ 01E6  EB 48	 	 	 	jmp	short	ADD2
+ 01E8  B5 00	 	 	ADD100:	mov	ch,0
+ 01EA  8A 0C	 	 	 	mov	cl,[si].EXP
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-8
+
+
+
+ 01EC  2A 0F	 	 	 	sub	cl,[bx].EXP
+ 01EE  79 04	 	 	 	jns	ADD1
+ 01F0  F6 D9	 	 	 	neg	cl
+ 01F2  87 F3	 	 	 	xchg	si,bx
+ 01F4  80 F9 10	 	 	ADD1:	cmp	cl,16
+ 01F7  73 37	 	 	 	jae	ADD2
+ 01F9  8B 57 02	 	 	 	mov	dx,[bx].MAN
+ 01FC  E3 02	 	 	 	jcxz	ADD10
+ 01FE  D3 EA	 	 	 	shr	dx,cl
+ 0200  8A 47 01	 	 	ADD10:	mov	al,[bx].SIGN
+ 0203  32 44 01	 	 	 	xor	al,[si].SIGN
+ 0206  8B 7C 02	 	 	 	mov	di,[si].MAN
+ 0209  8B 04	 	 	 	mov	ax,word ptr [si].EXP
+ 020B  75 0C	 	 	 	jne	ADD11
+ 020D  03 D7	 	 	 	add	dx,di
+ 020F  73 15	 	 	 	jnc	ADD15
+ 0211  D1 DA	 	 	 	rcr	dx,1
+ 0213  FE C0	 	 	 	inc	al
+ 0215  70 31	 	 	 	jo	ADD99
+ 0217  EB 20	 	 	 	jmp	short	ADD3
+ 0219  2B FA	 	 	ADD11:	sub	di,dx
+ 021B  8B D7	 	 	 	mov	dx,di
+ 021D  74 23	 	 	 	jz	ADD0
+ 021F  73 05	 	 	 	jnc	ADD15
+ 0221  F7 DA	 	 	 	neg	dx
+ 0223  80 F4 01	 	 	 	xor	ah,1
+ 0226  D1 E2	 	 	ADD15:	shl	dx,1
+ 0228  72 0D	 	 	 	jc	ADD4
+ 022A  FE C8	 	 	 	dec	al
+ 022C  70 14	 	 	 	jo	ADD0
+ 022E  EB F6	 	 	 	jmp	short	ADD15
+ 0230  8B 54 02	 	 	ADD2:	mov	dx,[si].MAN
+ 0233  8B 04	 	 	 	mov	ax,word ptr [si].EXP
+ 0235  EB 02	 	 	 	jmp	short	ADD3
+ 0237  D1 DA	 	 	ADD4:	rcr	dx,1
+ 0239  5E	 	 	ADD3:	pop	si
+ 023A  89 54 02	 	 	 	mov	[si].MAN,dx
+ 023D  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 023F  5B	 	 	 	pop	bx
+ 0240  5A	 	 	 	pop	dx
+ 0241  C3	 	 	 	ret
+ 0242  33 C0	 	 	ADD0:	xor	ax,ax
+ 0244  33 D2	 	 	 	xor	dx,dx
+ 0246  EB F1	 	 	 	jmp	short	ADD3
+ 0248  B0 7F	 	 	ADD99:	mov	al,7fh
+ 024A  BA FFFF	 	 	 	mov	dx,0ffffh
+ 024D  EB EA	 	 	 	jmp	short	ADD3
+ 	 	 	 	
+ 024F	 	 	 	FADD	ENDP
+ 	 	 	 	
+ 024F	 	 	 	FCOMP	PROC	near
+ 	 	 	 	
+ 024F  8A 44 01	 	 	 	mov	al,[si].SIGN
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-9
+
+
+
+ 0252  32 47 01	 	 	 	xor	al,[bx].SIGN
+ 0255  74 08	 	 	 	jz	CMP1
+ 0257  F6 44 01 01	 	CMP0:	test	[si].SIGN,1
+ 025B  74 43	 	 	 	jz	CMPGT
+ 025D  EB 46	 	 	 	jmp	short	CMPLT
+ 025F  F6 47 03 80	 	CMP1:	test	byte ptr [bx].MAN+1,80h
+ 0263  75 08	 	 	 	jnz	CMP3
+ 0265  F6 44 03 80	 	CMP2:	test	byte ptr [si].MAN+1,80h
+ 0269  74 40	 	 	 	jz	CMPEQ
+ 026B  EB EA	 	 	 	jmp	short	CMP0
+ 026D  F6 44 03 80	 	CMP3:	test	byte ptr [si].MAN+1,80h
+ 0271  75 0A	 	 	 	jnz	CMP4
+ 0273  87 F3	 	 	 	xchg	si,bx
+ 0275  E8 0265 R	 	 	call	CMP2
+ 0278  87 F3	 	 	 	xchg	si,bx
+ 027A  F7 D8	 	 	 	neg	ax
+ 027C  C3	 	 	 	ret
+ 027D  8A 04	 	 	CMP4:	mov	al,[si].EXP
+ 027F  3A 07	 	 	 	cmp	al,[bx].EXP
+ 0281  7F 0C	 	 	 	jg	CMP5
+ 0283  7C 0F	 	 	 	jl	CMP6
+ 0285  8B 44 02	 	 	 	mov	ax,[si].MAN
+ 0288  3B 47 02	 	 	 	cmp	ax,[bx].MAN
+ 028B  74 1E	 	 	 	jz	CMPEQ
+ 028D  7C 05	 	 	 	jl	CMP6
+ 028F  B8 0001	 	 	CMP5:	mov	ax,1
+ 0292  EB 03	 	 	 	jmp	short	CMP7
+ 0294  B8 FFFF	 	 	CMP6:	mov	ax,-1
+ 0297  F6 44 01 01	 	CMP7:	test	[si].SIGN,1
+ 029B  74 0B	 	 	 	jz	CMP8
+ 029D  F7 D8	 	 	 	neg	ax
+ 029F  C3	 	 	 	ret
+ 02A0  B8 0001	 	 	CMPGT:	mov	ax,1
+ 02A3  EB 03	 	 	 	jmp	short	CMP8
+ 02A5  B8 FFFF	 	 	CMPLT:	mov	ax,-1
+ 02A8  0B C0	 	 	CMP8:	or	ax,ax
+ 02AA  C3	 	 	 	ret
+ 02AB  33 C0	 	 	CMPEQ:	xor	ax,ax
+ 02AD  C3	 	 	 	ret
+ 	 	 	 	
+ 02AE	 	 	 	FCOMP	ENDP
+ 	 	 	 	
+ 02AE	 	 	 	FSCALE	PROC
+ 	 	 	 	
+ 02AE  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 02B2  74 04	 	 	 	jz	SCA98
+ 02B4  00 04	 	 	 	add	[si].EXP,al
+ 02B6  70 01	 	 	 	jo	SCA1
+ 02B8  C3	 	 	SCA98:	ret
+ 02B9  7D 09	 	 	SCA1:	jnl	SCA99
+ 02BB  33 C0	 	 	 	xor	ax,ax
+ 02BD  89 44 02	 	 	 	mov	[si].MAN,ax
+ 02C0  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-10
+
+
+
+ 02C2  EB F4	 	 	 	jmp	SCA98
+ 02C4  C7 44 02 FFFF	 	SCA99:	mov	[si].MAN,0ffffh
+ 02C9  C6 04 7F	 	 	 	mov	[si].EXP,7fh
+ 02CC  EB EA	 	 	 	jmp	SCA98
+ 	 	 	 	
+ 02CE	 	 	 	FSCALE	ENDP
+ 	 	 	 	
+ 02CE	 	 	 	FLOG	PROC
+ 	 	 	 	
+ 02CE  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ 02D2  74 3F	 	 	 	jz	FLOGMI
+ 02D4  80 7C 01 00	 	 	cmp	[si].SIGN,0
+ 02D8  75 41	 	 	 	jne	FLOG0
+ 02DA  A1 0002 R	 	 	mov	ax,LOGTBL
+ 02DD  8E C0	 	 	 	mov	es,ax
+ 02DF  B4 00	 	 	 	mov	ah,0
+ 02E1  8A 0C	 	 	 	mov	cl,[si].EXP
+ 02E3  8B 7C 02	 	 	 	mov	di,[si].MAN
+ 02E6  D1 E7	 	 	 	shl	di,1
+ 02E8  26: 8B 15	 	 	mov	dx,es:word ptr [di]
+ 02EB  0A C9	 	 	 	or	cl,cl
+ 02ED  79 06	 	 	 	jns	FLOG1
+ 02EF  F6 D9	 	 	 	neg	cl
+ 02F1  F7 DA	 	 	 	neg	dx
+ 02F3  B4 01	 	 	 	mov	ah,1
+ 02F5  86 CA	 	 	FLOG1:	xchg	cl,dl
+ 02F7  86 F2	 	 	 	xchg	dh,dl
+ 02F9  0B D2	 	 	 	or	dx,dx
+ 02FB  75 04	 	 	 	jnz	FLOG2
+ 02FD  0A C9	 	 	 	or	cl,cl
+ 02FF  74 1A	 	 	 	jz	FLOG0
+ 0301  B0 08	 	 	FLOG2:	mov	al,8
+ 0303  D0 E1	 	 	FLOG3:	shl	cl,1
+ 0305  D1 D2	 	 	 	rcl	dx,1
+ 0307  FE C8	 	 	 	dec	al
+ 0309  73 F8	 	 	 	jnc	FLOG3
+ 030B  D1 DA	 	 	 	rcr	dx,1
+ 030D  89 54 02	 	 	FLOG4:	mov	[si].MAN,dx
+ 0310  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 0312  C3	 	 	 	ret
+ 	 	 	 	
+ 0313  BA FFFF	 	 	FLOGMI:	mov	dx,0ffffh
+ 0316  B8 017F	 	 	 	mov	ax,017fh
+ 0319  EB F2	 	 	 	jmp	FLOG4
+ 031B  33 C0	 	 	FLOG0:	xor	ax,ax
+ 031D  33 D2	 	 	 	xor	dx,dx
+ 031F  EB EC	 	 	 	jmp	FLOG4
+ 	 	 	 	
+ 0321	 	 	 	FLOG	ENDP
+ 	 	 	 	
+ 0321	 	 	 	FEXP	PROC
+ 	 	 	 	
+ 0321  F6 44 03 80	 	 	test	byte ptr [si].MAN+1,80h
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-11
+
+
+
+ 0325  74 58	 	 	 	jz	FEXPR1
+ 0327  8A 0C	 	 	 	mov	cl,[si].EXP
+ 0329  80 F9 07	 	 	 	cmp	cl,7
+ 032C  7D 39	 	 	 	jge	FEXPI
+ 032E  80 F9 F0	 	 	 	cmp	cl,-16
+ 0331  7E 4C	 	 	 	jle	FEXPR1
+ 0333  33 FF	 	 	 	xor	di,di
+ 0335  A1 0004 R	 	 	mov	ax,EXPTBL
+ 0338  8E C0	 	 	 	mov	es,ax
+ 033A  8B 44 02	 	 	 	mov	ax,[si].MAN
+ 033D  80 E9 0F	 	 	 	sub	cl,15
+ 0340  F6 D9	 	 	 	neg	cl
+ 0342  B5 00	 	 	 	mov	ch,0
+ 0344  D1 E8	 	 	FEXP1:	shr	ax,1
+ 0346  D1 DF	 	 	 	rcr	di,1
+ 0348  E2 FA	 	 	 	loop	FEXP1
+ 034A  F6 44 01 01	 	 	test	[si].SIGN,1
+ 034E  74 0A	 	 	 	jz	FEXP2
+ 0350  F6 D8	 	 	 	neg	al
+ 0352  0B FF	 	 	 	or	di,di
+ 0354  74 04	 	 	 	jz	FEXP2
+ 0356  FE C8	 	 	 	dec	al
+ 0358  F7 DF	 	 	 	neg	di
+ 035A  81 E7 FFFE	 	FEXP2:	and	di,0fffeh
+ 035E  26: 8B 3D	 	 	mov	di,es:word ptr [di]
+ 0361  89 7C 02	 	 	 	mov	[si].MAN,di
+ 0364  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 0366  C3	 	 	 	ret
+ 0367  F6 44 01 01	 	FEXPI:	test	[si].SIGN,1
+ 036B  74 08	 	 	 	jz	FEXPIP
+ 036D  33 C0	 	 	 	xor	ax,ax
+ 036F  89 44 02	 	 	 	mov	[si].MAN,ax
+ 0372  89 04	 	 	 	mov	word ptr [si].EXP,ax
+ 0374  C3	 	 	 	ret
+ 0375  C7 44 02 FFFF	 	FEXPIP:	mov	[si].MAN,0ffffh
+ 037A  C7 04 007F	 	 	mov	word ptr [si].EXP,7fh
+ 037E  C3	 	 	 	ret
+ 037F  C7 44 02 8000	 	FEXPR1:	mov	[si].MAN,8000h
+ 0384  C7 04 0000	 	 	mov	word ptr [si],0
+ 0388  C3	 	 	 	ret
+ 	 	 	 	
+ 0389	 	 	 	FEXP	ENDP
+ 	 	 	 	
+ 0389	 	 	 	ITOR	PROC
+ 	 	 	 	
+ 0389  0B C0	 	 	 	or	ax,ax
+ 038B  74 1E	 	 	 	jz	ITOR0
+ 038D  79 08	 	 	 	jns	ITOR1
+ 038F  C6 45 01 01	 	 	mov	[di].SIGN,1
+ 0393  F7 D8	 	 	 	neg	ax
+ 0395  EB 04	 	 	 	jmp	short ITOR2
+ 0397  C6 45 01 00	 	ITOR1:	mov	[di].SIGN,0
+ 039B  B1 10	 	 	ITOR2:	mov	cl,16
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-12
+
+
+
+ 039D  D1 E0	 	 	ITOR3:	shl	ax,1
+ 039F  FE C9	 	 	 	dec	cl
+ 03A1  73 FA	 	 	 	jnc	ITOR3
+ 03A3  D1 D8	 	 	 	rcr	ax,1
+ 03A5  89 45 02	 	 	 	mov	[di].MAN,ax
+ 03A8  88 0D	 	 	 	mov	[di].EXP,cl
+ 03AA  C3	 	 	 	ret
+ 03AB  33 C0	 	 	ITOR0:	xor	ax,ax
+ 03AD  89 45 02	 	 	 	mov	[di].MAN,ax
+ 03B0  89 05	 	 	 	mov	word ptr [di].EXP,ax
+ 03B2  C3	 	 	 	ret
+ 	 	 	 	
+ 03B3	 	 	 	ITOR	ENDP
+ 	 	 	 	
+ 03B3	 	 	 	RTOI	PROC	near
+ 	 	 	 	
+ 03B3  8B 44 02	 	 	 	mov	ax,[si].MAN
+ 03B6  F6 C4 80	 	 	 	test	ah,80h
+ 03B9  74 22	 	 	 	jz	RTOI0
+ 03BB  8A 0C	 	 	 	mov	cl,[si].EXP
+ 03BD  80 E9 0F	 	 	 	sub	cl,15
+ 03C0  74 0B	 	 	 	je	RTOI4
+ 03C2  7D 15	 	 	 	jnl	RTOI2
+ 03C4  70 17	 	 	 	jo	RTOI0
+ 03C6  F6 D9	 	 	 	neg	cl
+ 03C8  D3 E8	 	 	 	shr	ax,cl
+ 03CA  15 0000	 	 	 	adc	ax,0
+ 03CD  25 7FFF	 	 	RTOI4:	and	ax,7fffh
+ 03D0  F6 44 01 01	 	 	test	[si].SIGN,1
+ 03D4  74 02	 	 	 	jz	RTOI5
+ 03D6  F7 D8	 	 	 	neg	ax
+ 03D8  C3	 	 	RTOI5:	ret
+ 03D9  D3 E0	 	 	RTOI2:	shl	ax,cl
+ 03DB  EB F0	 	 	 	jmp	short	RTOI4
+ 03DD  33 C0	 	 	RTOI0:	xor	ax,ax
+ 03DF  C3	 	 	 	ret
+ 	 	 	 	
+ 03E0	 	 	 	RTOIF	PROC	near
+ 	 	 	 	
+ 03E0  8B 44 02	 	 	 	mov	ax,[si].MAN
+ 03E3  F6 C4 80	 	 	 	test	ah,80h
+ 03E6  74 F5	 	 	 	jz	RTOI0
+ 03E8  33 D2	 	 	 	xor	dx,dx
+ 03EA  8A 0C	 	 	 	mov	cl,[si].EXP
+ 03EC  80 E9 0F	 	 	 	sub	cl,15
+ 03EF  74 10	 	 	 	je	RTOIF4
+ 03F1  7D E6	 	 	 	jnl	RTOI2
+ 03F3  70 E8	 	 	 	jo	RTOI0
+ 03F5  F6 D9	 	 	 	neg	cl
+ 03F7  B5 00	 	 	 	mov	ch,0
+ 03F9  D1 E8	 	 	RTOIF1:	shr	ax,1
+ 03FB  73 02	 	 	 	jnc	RTOIF11
+ 03FD  B2 01	 	 	 	mov	dl,1
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	1-13
+
+
+
+ 03FF  E2 F8	 	 	RTOIF11:loop	RTOIF1
+ 0401  25 7FFF	 	 	RTOIF4:	and	ax,7fffh
+ 0404  F6 44 01 01	 	 	test	[si].SIGN,1
+ 0408  74 04	 	 	 	jz	RTOIF5
+ 040A  F7 D8	 	 	 	neg	ax
+ 040C  2B C2	 	 	 	sub	ax,dx
+ 040E  C3	 	 	RTOIF5:	ret
+ 	 	 	 	
+ 040F	 	 	 	RTOIF	ENDP
+ 	 	 	 	
+ 040F	 	 	 	RTOI	ENDP
+ 	 	 	 	
+                             C	 	include	epilogue.h
+                             C	;	end of any assembly code
+                             C	
+ 040F                        C	@CODE	ENDS
+ 	 	 	 	
+ 	 	 	 	 	end
+
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	Symbols
+	 	 	 	-1
+
+
+
+Structures and records:
+
+	 	N a m e	 	 	Width	# fields
+	 	 	 	 	Shift	Width	Mask	Initial
+
+REAL . . . . . . . . . . . . . .	0004	0003
+  EXP. . . . . . . . . . . . . . .	0000
+  SIGN . . . . . . . . . . . . . .	0001
+  MAN. . . . . . . . . . . . . . .	0002
+
+Segments and groups:
+
+	 	N a m e	 	 	Size	align	combine	class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+  @DATAB . . . . . . . . . . . . .	0014	WORD  	PUBLIC	'DATAB'
+  @DATAC . . . . . . . . . . . . .	0006	WORD  	PUBLIC	'DATAC'
+  @DATAI . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'DATAI'
+  @DATAT . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'DATAT'
+  @DATAU . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'DATAU'
+  @DATAV . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'DATAV'
+SEGEXP . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'EXPTB'
+SEGLOG . . . . . . . . . . . . .	0000	WORD  	PUBLIC	'LOGTB'
+@CODE. . . . . . . . . . . . . .	040F	WORD  	PUBLIC	'CODE'
+
+Symbols:            
+
+	 	N a m e	 	 	Type	Value	Attr         
+
+ADD0 . . . . . . . . . . . . . .	L NEAR 	0242	@CODE
+ADD1 . . . . . . . . . . . . . .	L NEAR 	01F4	@CODE
+ADD10. . . . . . . . . . . . . .	L NEAR 	0200	@CODE
+ADD100 . . . . . . . . . . . . .	L NEAR 	01E8	@CODE
+ADD11. . . . . . . . . . . . . .	L NEAR 	0219	@CODE
+ADD15. . . . . . . . . . . . . .	L NEAR 	0226	@CODE
+ADD2 . . . . . . . . . . . . . .	L NEAR 	0230	@CODE
+ADD3 . . . . . . . . . . . . . .	L NEAR 	0239	@CODE
+ADD4 . . . . . . . . . . . . . .	L NEAR 	0237	@CODE
+ADD99. . . . . . . . . . . . . .	L NEAR 	0248	@CODE
+BDOS . . . . . . . . . . . . . .	Number	0021	
+CMP0 . . . . . . . . . . . . . .	L NEAR 	0257	@CODE
+CMP1 . . . . . . . . . . . . . .	L NEAR 	025F	@CODE
+CMP2 . . . . . . . . . . . . . .	L NEAR 	0265	@CODE
+CMP3 . . . . . . . . . . . . . .	L NEAR 	026D	@CODE
+CMP4 . . . . . . . . . . . . . .	L NEAR 	027D	@CODE
+CMP5 . . . . . . . . . . . . . .	L NEAR 	028F	@CODE
+CMP6 . . . . . . . . . . . . . .	L NEAR 	0294	@CODE
+CMP7 . . . . . . . . . . . . . .	L NEAR 	0297	@CODE
+CMP8 . . . . . . . . . . . . . .	L NEAR 	02A8	@CODE
+CMPEQ. . . . . . . . . . . . . .	L NEAR 	02AB	@CODE
+CMPGT. . . . . . . . . . . . . .	L NEAR 	02A0	@CODE
+CMPLT. . . . . . . . . . . . . .	L NEAR 	02A5	@CODE
+D0MSG. . . . . . . . . . . . . .	L BYTE 	0000	@DATAB
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	Symbols
+	 	 	 	-2
+
+
+
+DATASEG. . . . . . . . . . . . .	L WORD 	0000	@DATAC	Global
+DIV0 . . . . . . . . . . . . . .	L NEAR 	00E6	@CODE
+DIV1 . . . . . . . . . . . . . .	L NEAR 	00E4	@CODE
+DIV100 . . . . . . . . . . . . .	L NEAR 	00CF	@CODE
+DIV98. . . . . . . . . . . . . .	L NEAR 	00DD	@CODE
+DIV99. . . . . . . . . . . . . .	L NEAR 	00F6	@CODE
+DIVERR . . . . . . . . . . . . .	L NEAR 	00EF	@CODE
+EXPTBL . . . . . . . . . . . . .	L WORD 	0004	@DATAC	Global
+FADD . . . . . . . . . . . . . .	N PROC	01D5	@CODE	Global	Length 
+	 	 	 	=007A
+FCMLT. . . . . . . . . . . . . .	N PROC	007C	@CODE	Global	Length 
+	 	 	 	=0014
+FCOMP. . . . . . . . . . . . . .	N PROC	024F	@CODE	Global	Length 
+	 	 	 	=005F
+FDIV . . . . . . . . . . . . . .	N PROC	0090	@CODE	Global	Length 
+	 	 	 	=00B3
+FEXP . . . . . . . . . . . . . .	N PROC	0321	@CODE	Global	Length 
+	 	 	 	=0068
+FEXP1. . . . . . . . . . . . . .	L NEAR 	0344	@CODE
+FEXP2. . . . . . . . . . . . . .	L NEAR 	035A	@CODE
+FEXPI. . . . . . . . . . . . . .	L NEAR 	0367	@CODE
+FEXPIP . . . . . . . . . . . . .	L NEAR 	0375	@CODE
+FEXPR1 . . . . . . . . . . . . .	L NEAR 	037F	@CODE
+FINV . . . . . . . . . . . . . .	N PROC	0100	@CODE	Global	Length 
+	 	 	 	=0043
+FLOG . . . . . . . . . . . . . .	N PROC	02CE	@CODE	Global	Length 
+	 	 	 	=0053
+FLOG0. . . . . . . . . . . . . .	L NEAR 	031B	@CODE
+FLOG1. . . . . . . . . . . . . .	L NEAR 	02F5	@CODE
+FLOG2. . . . . . . . . . . . . .	L NEAR 	0301	@CODE
+FLOG3. . . . . . . . . . . . . .	L NEAR 	0303	@CODE
+FLOG4. . . . . . . . . . . . . .	L NEAR 	030D	@CODE
+FLOGMI . . . . . . . . . . . . .	L NEAR 	0313	@CODE
+FMLT . . . . . . . . . . . . . .	N PROC	0017	@CODE	Global	Length 
+	 	 	 	=0079
+FMLTX. . . . . . . . . . . . . .	L NEAR 	002D	@CODE
+FSCALE . . . . . . . . . . . . .	N PROC	02AE	@CODE	Global	Length 
+	 	 	 	=0020
+FSQAR. . . . . . . . . . . . . .	N PROC	017E	@CODE	Global	Length 
+	 	 	 	=004B
+FSQRT. . . . . . . . . . . . . .	N PROC	0143	@CODE	Global	Length 
+	 	 	 	=003B
+FSUB . . . . . . . . . . . . . .	N PROC	01C9	@CODE	Global	Length 
+	 	 	 	=000C
+INTER. . . . . . . . . . . . . .	N PROC	0000	@CODE	Global	Length 
+	 	 	 	=0017
+INV1 . . . . . . . . . . . . . .	L NEAR 	0128	@CODE
+INV98. . . . . . . . . . . . . .	L NEAR 	0134	@CODE
+INV99. . . . . . . . . . . . . .	L NEAR 	0139	@CODE
+ITOR . . . . . . . . . . . . . .	N PROC	0389	@CODE	Global	Length 
+	 	 	 	=002A
+ITOR0. . . . . . . . . . . . . .	L NEAR 	03AB	@CODE
+ The Microsoft MACRO Assembler             10-22-97    	PAGE	Symbols
+	 	 	 	-3
+
+
+
+ITOR1. . . . . . . . . . . . . .	L NEAR 	0397	@CODE
+ITOR2. . . . . . . . . . . . . .	L NEAR 	039B	@CODE
+ITOR3. . . . . . . . . . . . . .	L NEAR 	039D	@CODE
+LOGTBL . . . . . . . . . . . . .	L WORD 	0002	@DATAC	Global
+MLT0 . . . . . . . . . . . . . .	L NEAR 	0069	@CODE
+MLT1 . . . . . . . . . . . . . .	L NEAR 	0067	@CODE
+MLT100 . . . . . . . . . . . . .	L NEAR 	0052	@CODE
+MLT98. . . . . . . . . . . . . .	L NEAR 	0060	@CODE
+MLT99. . . . . . . . . . . . . .	L NEAR 	0072	@CODE
+RTOI . . . . . . . . . . . . . .	N PROC	03B3	@CODE	Global	Length 
+	 	 	 	=005C
+RTOI0. . . . . . . . . . . . . .	L NEAR 	03DD	@CODE
+RTOI2. . . . . . . . . . . . . .	L NEAR 	03D9	@CODE
+RTOI4. . . . . . . . . . . . . .	L NEAR 	03CD	@CODE
+RTOI5. . . . . . . . . . . . . .	L NEAR 	03D8	@CODE
+RTOIF. . . . . . . . . . . . . .	N PROC	03E0	@CODE	Global	Length 
+	 	 	 	=002F
+RTOIF1 . . . . . . . . . . . . .	L NEAR 	03F9	@CODE
+RTOIF11. . . . . . . . . . . . .	L NEAR 	03FF	@CODE
+RTOIF4 . . . . . . . . . . . . .	L NEAR 	0401	@CODE
+RTOIF5 . . . . . . . . . . . . .	L NEAR 	040E	@CODE
+SCA1 . . . . . . . . . . . . . .	L NEAR 	02B9	@CODE
+SCA98. . . . . . . . . . . . . .	L NEAR 	02B8	@CODE
+SCA99. . . . . . . . . . . . . .	L NEAR 	02C4	@CODE
+SQAR1. . . . . . . . . . . . . .	L NEAR 	01B3	@CODE
+SQAR98 . . . . . . . . . . . . .	L NEAR 	01A8	@CODE
+SQAR99 . . . . . . . . . . . . .	L NEAR 	01BE	@CODE
+SQAR999. . . . . . . . . . . . .	L NEAR 	01C7	@CODE
+SQRT10 . . . . . . . . . . . . .	L NEAR 	0169	@CODE
+SQRT98 . . . . . . . . . . . . .	L NEAR 	0177	@CODE
+SQRT99 . . . . . . . . . . . . .	L NEAR 	017C	@CODE
+@AB. . . . . . . . . . . . . . .	Number	0004	
+@BIGMODEL. . . . . . . . . . . .	Number	0000	
+@IB. . . . . . . . . . . . . . .	L BYTE 	0000	@DATAI
+@IW. . . . . . . . . . . . . . .	L WORD 	0000	@DATAI
+@SB. . . . . . . . . . . . . . .	L BYTE 	0000	@DATAC
+@SW. . . . . . . . . . . . . . .	L WORD 	0000	@DATAC
+@UB. . . . . . . . . . . . . . .	L BYTE 	0000	@DATAU
+@UW. . . . . . . . . . . . . . .	L WORD 	0000	@DATAU
+
+Warning Severe
+Errors	Errors 
+0	0

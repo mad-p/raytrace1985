@@ -1,0 +1,183 @@
+--- REALA.ASM~	Wed Oct  9 13:19:32 1985
++++ reala.asm	Wed Oct 22 21:42:18 1997
+@@ -11,12 +11,6 @@
+ 
+ @code	ends
+ 
+-SEGofTABLE equ	0a800h
+-LOGTBL	equ	0
+-EXPTBL	equ	1
+-PAGING	equ	0a6h
+-BDOS	equ	21h
+-
+ REAL	struc
+ 
+ EXP	db	?
+@@ -31,7 +25,8 @@
+ 	public	SEGTABLE
+ 
+ DATASEG	dw	SEG DGROUP
+-SEGTABLE	dw	SEGofTABLE
++LOGTBL	dw	SEG SEGLOG
++EXPTBL	dw	SEG SEGEXP
+ 
+ @datac	ends
+ 
+@@ -59,7 +54,6 @@
+ 	push	bp
+ 	mov	bp,sp
+ 	push	es
+-	mov	es,SEGTABLE
+ 	mov	si,word ptr 6[bp]
+ 	mov	bx,word ptr 8[bp]
+ 	mov	ax,bx
+@@ -81,8 +75,8 @@
+ 	jns	MLT0
+ 	mov	di,[bx].MAN
+ 	shl	di,1
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ FMLTX:	mov	ch,[bx].SIGN
+ 	xor	[si].SIGN,ch
+@@ -102,8 +96,8 @@
+ 	jmp	short	MLT98
+ MLT100:	and	dx,0fffeh
+ 	mov	di,dx
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ MLT98:	mov	[si].MAN,dx
+ 	mov	[si].EXP,ch
+@@ -127,8 +121,8 @@
+ 	push	dx
+ 	test	byte ptr [si].MAN+1,80h
+ 	jz	MLT0
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ 	mov	dx,[bx].MAN
+ 	jmp	FMLTX
+@@ -152,8 +146,8 @@
+ 	jo	DIV1
+ 	mov	di,[si].MAN
+ 	shl	di,1
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ 	mov	di,[bx].MAN
+ 	shl	di,1
+@@ -168,8 +162,8 @@
+ 	jmp	short	DIV98
+ DIV100:	and	dx,0fffeh
+ 	mov	di,dx
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ DIV98:	mov	[si].MAN,dx
+ 	mov	[si].EXP,ch
+@@ -199,8 +193,8 @@
+ 	je	DIVERR
+ 	neg	[si].EXP
+ 	jo	INV99
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	di,dx
+ 	shl	di,1
+ 	mov	di,es:word ptr [di]
+@@ -212,8 +206,8 @@
+ 	inc	[si].EXP
+ 	jmp	short	INV98
+ INV1:	and	di,0fffeh
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ INV98:	mov	[si].MAN,dx
+ 	pop	dx
+@@ -245,8 +239,8 @@
+ 	mov	ch,[si].EXP
+ 	mov	di,[si].MAN
+ 	shl	di,1
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ 	sar	ch,1
+ 	rcr	dx,1
+@@ -258,8 +252,8 @@
+ 	jmp	short	SQRT98	
+ SQRT10:	and	dx,0fffeh
+ 	mov	di,dx
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ SQRT98:	mov	[si].MAN,dx
+ 	mov	[si].EXP,ch
+@@ -275,8 +269,8 @@
+ 	jz	SQAR999
+ 	mov	di,[si].MAN
+ 	shl	di,1
+-	mov	al,LOGTBL
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ 	shl	dx,1
+ 	mov	ch,[si].EXP
+@@ -284,8 +278,8 @@
+ 	jo	SQAR1
+ 	and	dx,0fffeh
+ 	mov	di,dx
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	dx,es:word ptr [di]
+ SQAR98:	mov	[si].MAN,dx
+ 	mov	[si].SIGN,0
+@@ -446,8 +440,9 @@
+ 	jz	FLOGMI
+ 	cmp	[si].SIGN,0
+ 	jne	FLOG0
+-	mov	ax,LOGTBL			;  ah = 0
+-	out	PAGING,al
++	mov	ax,LOGTBL
++	mov	es,ax
++	mov	ah,0
+ 	mov	cl,[si].EXP
+ 	mov	di,[si].MAN
+ 	shl	di,1
+@@ -492,8 +487,8 @@
+ 	cmp	cl,-16
+ 	jle	FEXPR1
+ 	xor	di,di
+-	mov	al,EXPTBL
+-	out	PAGING,al
++	mov	ax,EXPTBL
++	mov	es,ax
+ 	mov	ax,[si].MAN
+ 	sub	cl,15
+ 	neg	cl
+@@ -606,4 +601,3 @@
+ 	include	epilogue.h
+ 
+ 	end
+-
+\ No newline at end of file

@@ -1,0 +1,135 @@
+echo off
+echo Making RAYTRACE.EXE with map
+echo This BATCH command must run on RAMDISK (Drive C)
+echo And current directory must be root (C:\)
+pause
+cd \
+del bin\*.com
+rd bin
+del vi\*.exe
+del vi\*.ovl
+del vi\*.hlp
+rd vi
+cd a:\bin
+cd b:\ray-t'85\c
+cd \c86
+copy b:*.h
+if not %1x==1x goto comray3
+shift
+echo COMPILATION OF RAY1.C
+copy b:ray1.c
+cc1 -d_debug ray1
+if errorlevel 1 goto error1
+cc2 ray1
+if errorlevel 1 goto error1
+cc3 ray1
+if errorlevel 1 goto error1
+cc4 ray1
+if errorlevel 1 goto error1
+copy ray1.obj b:..\objects
+del ray1.*
+:comray3
+if not %1x==3x goto asmray2
+shift
+echo COMPILATION OF RAY3.VC
+copy b:ray3.vc
+a:parse ray3
+copy ray3.c b:
+cc1 ray3
+if errorlevel 1 goto error2
+cc2 ray3
+if errorlevel 1 goto error2
+cc3 ray3
+if errorlevel 1 goto error2
+cc4 ray3
+if errorlevel 1 goto error2
+copy ray3.obj b:..\objects
+del ray3.*
+:asmray2
+cd b:..\assembly
+del *.exe
+del *.h
+del *.bat
+copy b:*.ah
+copy b:*.h
+if not %1x==2x goto asmray4
+shift
+echo ASSEMBLING OF RAY2.MAC
+copy b:ray2.mac
+a:parse ray2.mac ray2.asm
+copy ray2.asm b:
+a:masm ray2;
+if errorlevel 1 goto error
+copy ray2.obj b:..\objects
+del ray2.*
+:asmray4
+if not %1x==4x goto lib
+shift
+echo ASSEMBLING OF RAY4.ASM
+copy b:ray4.asm
+a:masm ray4;
+if errorlevel 1 goto error
+copy ray4.obj b:..\objects
+del ray4.*
+:lib
+del *.ah
+del *.h
+cd b:..\objects
+if not %1x==libx goto link
+shift
+echo LIBRARYING RAYCORE
+cd a:\c86
+copy b:*.obj
+a:marion -u raycore ray2 ray3 ray4 reala rfconv
+copy raycore.lib b:
+del *.obj
+del *.lib
+:link
+if not %1x==linkx goto allok
+shift
+echo LINKING RAYTRACE
+copy b:raycore.lib
+copy a:\c86\librarys\c86s2s.lib
+copy b:ray1.obj
+if %1x==x set m=nomap
+if not %1x==x set m=%1
+copy b:%m%.obj
+cd a:\bin
+a:link ray1+%m%,raytrace,raytrace/map,raycore+c86s2s
+if errorlevel 1 goto error
+cd b:..\raytrace
+del b:raytrace.*
+copy raytrace.exe b:
+copy raytrace.map b:
+goto allok
+:error1
+:error2
+:error
+echo Error(s) Detected.
+pause
+:allok
+cd \c86
+set m=
+del *.exe
+del *.$*
+del *.obj
+del *.lib
+del *.asm
+del *.ah
+del *.mah
+del *.h
+del *.c
+del *.map
+cd \
+md vi
+md bin
+copy a:\bin\chkdsk.com bin
+copy a:\vi vi
+copy a:\c86\cc*.* c86
+copy a:\c86\b.bat c86
+cd a:\c86
+cd b:\ray-t'85\raytrace
+cd c:\c86
+echo END OF PROCESS.
+echo on
+

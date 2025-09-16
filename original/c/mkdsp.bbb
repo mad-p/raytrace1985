@@ -1,0 +1,13 @@
+c:
+copy a:\c86\cc*.*
+copy a:\c86\headers\std*.h
+copy b:\ray-t'85\c\display.c
+command /ccc display
+copy display.obj b:\ray-t'85\c
+del *.exe
+copy a:\bin\link.exe
+copy a:\c86\librarys\c86s2s.lib
+copy b:\util\graph.lib
+link display,,nul,graph+c86s2s
+copy display.exe b:\ray-t'85\raytrace
+

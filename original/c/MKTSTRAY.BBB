@@ -1,0 +1,71 @@
+echo off
+if not %1x==1x goto comray3
+shift
+echo COMPILATION OF RAY1.C
+cc1 -d_debug b:ray1
+if errorlevel 1 goto error1
+cc2 b:ray1
+if errorlevel 1 goto error1
+cc3 b:ray1
+if errorlevel 1 goto error1
+cc4 b:ray1
+if errorlevel 1 goto error1
+copy b:ray1.obj b:..\objects
+:comray3
+if not %1x==3x goto asmmfunc
+shift
+echo COMPILATION OF RAY3.C
+cc1 b:ray3
+if errorlevel 1 goto error2
+cc2 b:ray3
+if errorlevel 1 goto error2
+cc3 b:ray3
+if errorlevel 1 goto error2
+cc4 b:ray3
+if errorlevel 1 goto error2
+copy b:ray3.obj b:..\objects
+:asmmfunc
+b:
+cd ..\assembly
+if not %1x==mx goto asmray2
+shift
+echo ASSEMBLING OF MFUNC.ASM
+masm mfunc.asm,..\objects\mfunc.obj,nul,nul
+if errorlevel 1 goto error
+:asmray2
+if not %1x==2x goto lib
+shift
+echo ASSEMBLING OF RAY2.MAC
+masm ray2.asm,..\objects\ray2.obj,nul,nul
+if errorlevel 1 goto error
+:lib
+cd ..\objects
+if not %1x==libx goto link
+shift
+echo LIBRARYING RAYCORE
+erase b:raycore.lib
+a:
+marion -u b:raycore b:ray1 b:ray3 b:mfunc b:reala b:rfconv
+cd librarys
+:link
+if not %1x==linkx goto allok
+b:
+echo LINKING TESTRAY
+link ray2+nomap,..\c\testray,..\c\testray/map,raycore+a:c86s2s
+if errorlevel 1 goto error
+goto allok
+:error1
+erase b:ray1.$*
+goto error
+:error2
+erase b:ray3.$*
+:error
+echo Error(s) Detected.
+pause
+:allok
+a:
+cd \c86
+cd b:\ray-t'85\c
+echo END OF PROCESS.
+echo on
+

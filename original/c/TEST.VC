@@ -1,0 +1,126 @@
+#include "stdio2.h"
+
+typedef double vector[3];
+
+#expand @	0 1 2
+
+vector *outerproduct(a, b, c)
+vector *a, *b, *c;
+{
+
+	(*c)[@] = (*a)[@+] * (*b)[@-]  -  (*a)[@-] * (*b)[@+];
+
+	return c;
+
+}
+
+double innerproduct(a,b)
+vector *a, *b;
+{
+
+	return (
+		 (*a)[@] * (*b)[@]  +
+					0 ) ;
+
+}
+
+typedef vector matrix[3];
+
+#pause
+static char t1[] = "@@@";
+#unpause
+
+#endexp @
+
+matrix *product(a, b, c)
+matrix *a, *b, *c;
+{
+#expand block	%	0 1 2
+#expand block	@	0 1 2
+#expand		&	0 1 2
+
+	(*c)[%][@]  =
+			(*a)[%][&] * (*b)[&][@]    +
+							0.0 ;
+
+#pause	@
+/* %%% @@@ &&& pause atmark */
+#pause	%
+/* %%% @@@ &&& pause atmark and percent */
+#unpause @
+/* %%% @@@ &&& pause percent */
+#pause
+/* %%% @@@ &&& pause percent and ampersand */
+#unpause 
+/* %%% @@@ &&& pause percent */
+#endexp &
+#unpause %
+/* %%% @@@ &&& noexpand ampersand */
+#endexp	@
+/* %%% @@@ &&& noexpand ampersand and atmark */
+#endexp %
+
+	return c;
+
+}
+
+#expand	@	0 1 2
+#expand %	0 1 2
+
+#expand block	$	+ -
+#if 1 $ 1 == 0
+matrix *msub(a, b, c)
+#else
+matrix *madd(a, b, c)
+#endif
+matrix *a, *b, *c;
+{
+	(*c)[@][%] = (*a)[@][%] $ (*b)[@][%];
+
+	return c;
+}
+
+#endexp	$
+
+matrix *mlin(a, k)
+matrix *a;
+double k;
+{
+	(*a)[@][%] *= k;
+
+	return a;
+}
+
+#endexp	%
+#endexp	@
+
+#kanji	on
+static char t2[] = "Š¿š‰¼–¼¬‚¶‚è•¶‚ÌƒeƒXƒg";
+#kanji off
+/* ‚±‚ê‚Í•ÏŠ·‚³‚ê‚È‚¢ */
+#kanji
+static char t3[] = "‚±‚ê‚Í•ÏŠ·‚³‚ê‚é";
+#kanji
+/* ‚±‚ê‚à•ÏŠ·‚³‚ê‚È‚¢ */
+
+#expand	@	"test\"strip1" 'test"strip2' "test'strip1" 'test\'strip2'
+teststrip()
+{
+	/* test for strip @ @1 @2 @3 */
+
+#endexp	@
+#expand	@	bunkatsu\\\n\tdekita ""
+	printf("this is test for division@Ok");
+#endexp @
+#expand @	\060 \061 \062 \063 \064 \065 \066 \067 \070 \071
+	printf("test for octal number @0@1@2@3@4@5@6@7@8@9 @@0+@0-@");
+#endexp @
+}
+
+#expand	$	0 1 2
+#expand	@	X Y Z
+	a.@.@$ = b.@+*c.@-;
+#endexp	@
+#endexp	$
+
+

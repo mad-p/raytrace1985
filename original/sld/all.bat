@@ -1,0 +1,10 @@
+raytrace LATICE.SLD
+raytrace LATICE2.SLD
+raytrace PLAIN2.SLD
+raytrace PLAIN3.SLD
+raytrace PLAIN4.SLD
+raytrace PLANET.SLD
+raytrace TEST.SLD
+raytrace TEST2.SLD
+raytrace TEST3.SLD
+raytrace TESTUSER.SLD

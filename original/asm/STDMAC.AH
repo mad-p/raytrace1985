@@ -1,0 +1,206 @@
+;
+;
+;	standard macro definition
+;
+;
+
+link	macro	Align
+
+	push	bp
+	mov	bp,sp
+
+	IFNB	<Align>
+
+	sub	sp,Align
+
+	ENDIF
+
+	endm
+
+unlk	macro
+
+	mov	sp,bp
+	pop	bp
+
+	endm
+
+njz	macro	ADRS
+	LOCAL	NEXT
+
+	jnz	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njnz	macro	ADRS
+	LOCAL	NEXT
+
+	jz	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njc	macro	ADRS
+	LOCAL	NEXT
+
+	jnc	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njnc	macro	ADRS
+	LOCAL	NEXT
+
+	jc	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njl	macro	ADRS
+	LOCAL	NEXT
+
+	jnl	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njnl	macro	ADRS
+	LOCAL	NEXT
+
+	jl	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njg	macro	ADRS
+	LOCAL	NEXT
+
+	jng	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njng	macro	ADRS
+	LOCAL	NEXT
+
+	jg	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njs	macro	ADRS
+	LOCAL	NEXT
+
+	jns	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njns	macro	ADRS
+	LOCAL	NEXT
+
+	js	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njbe	macro	ADRS
+	LOCAL	NEXT
+
+	jnbe	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njnbe	macro	ADRS
+	LOCAL	NEXT
+
+	jbe	NEXT
+	jmp	ADRS
+NEXT:
+
+	endm
+
+njle	macro	ADRS
+
+	njng	ADRS
+
+	endm
+
+njnle	macro	ADRS
+
+	njg	ADRS
+
+	endm
+
+njge	macro	ADRS
+
+	njnl	ADRS
+
+	endm
+
+njnge	macro	ADRS
+
+	njl	ADRS
+
+	endm
+
+njb	macro	ADRS
+
+	njc	ADRS
+
+	endm
+
+njnb	macro	ADRS
+
+	njnc	ADRS
+
+	endm
+
+nje	macro	ADRS
+
+	njz	ADRS
+
+	endm
+
+njne	macro	ADRS
+
+	njnz	ADRS
+
+	endm
+
+nja	macro	ADRS
+
+	njnbe	ADRS
+
+	endm
+
+njna	macro	ADRS
+
+	njbe	ADRS
+
+	endm
+
+njae	macro	ADRS
+
+	njnc	ADRS
+
+	endm
+
+njnae	macro	ADRS
+
+	njc	ADRS
+
+	endm
+

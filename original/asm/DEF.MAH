@@ -1,0 +1,336 @@
+	.XLIST
+
+@BIGMODEL	EQU	0
+include	prologue.h
+
+	extrn	FADD	: near
+	extrn	FSUB	: near
+	extrn	FMLT	: near
+	extrn	FDIV	: near
+	extrn	FSQRT	: near
+	extrn	FSQAR	: near
+	extrn	FCOMP	: near
+	extrn	FLOG	: near
+	extrn	FEXP	: near
+	extrn	ITOR	: near
+	extrn	RTOI	: near
+	extrn	RTOIF	: near
+	extrn	FINV	: near
+	extrn	FSCALE	: near
+
+@CODE	ENDS
+
+	include	stdmac.ah
+
+#expand	block	@	ADD SUB MLT DIV
+FP@	macro	DST,SRC
+
+	push	si
+	push	bx
+	lea	ax,DST
+	lea	bx,SRC
+	mov	si,ax
+	call	F@
+	pop	bx
+	pop	si
+
+	endm
+
+#endexp	@
+FPCMP	macro	DST,SRC
+
+	push	si
+	push	bx
+	lea	ax,DST
+	lea	bx,SRC
+	mov	si,ax
+	call	FCOMP
+	pop	bx
+	pop	si
+
+	endm
+
+#expand	block	@	SQRT SQAR INV EXP LOG
+FP@	macro	DST
+
+	push	si
+	lea	si,DST
+	call	F@
+	pop	si
+	
+	endm
+
+#endexp	@
+FITOR	macro	DST
+
+	push	di
+	lea	di,DST
+	call	ITOR
+	pop	di
+	
+	endm
+
+FRTOI	macro	DST
+
+	push	si
+	lea	si,DST
+	call	RTOI
+	pop	si
+	
+	endm
+
+FRTOIF	macro	DST
+
+	push	si
+	lea	si,DST
+	call	RTOIF
+	pop	si
+	
+	endm
+
+FPSCALE	macro	DST,SRC
+
+	push	si
+	lea	si,DST
+	mov	al,SRC
+	call	FSCALE
+	pop	si
+
+	endm
+
+FPABS	macro	DST
+
+	mov	DST.SIGN,0
+
+	endm
+
+FPSGN?	macro	SRC
+
+	cmp	SRC.SIGN,0
+
+	endm
+
+FP0?	macro	SRC
+
+	test	byte ptr SRC.MAN+1,80h
+
+	endm
+
+FPCHS	macro	DST
+
+	xor	DST.SIGN,1
+
+	endm
+
+FPUSH	macro	SRC
+
+	push	word ptr SRC+2
+	push	word ptr SRC
+
+	endm
+
+FPOP	macro
+
+	pop	ax
+	pop	ax
+
+	endm
+
+FPOPM	macro	DST
+
+	pop	word ptr DST
+	pop	word ptr DST+2
+
+	endm
+
+FPLOD	macro	DST,MANT,EXPO,SIGNA
+
+	mov	word ptr DST.MAN,MANT
+
+	IFNB	<SIGNA>
+
+	mov	word ptr DST.EXP,SIGNA*256+EXPO
+
+	ELSE
+
+	mov	byte ptr DST.EXP,EXPO
+
+	ENDIF
+
+	endm
+
+MOVMEM	macro	DST,SRC,COUNT
+
+	IFB	<COUNT>
+
+	FPUSH	SRC
+	FPOPM	DST
+
+	ELSE
+
+	IF	COUNT eq 4
+
+	FPUSH	SRC
+	FPOPM	DST
+
+	ELSE
+
+	push	es
+	push	si
+	mov	es,DATASEG
+	lea	cx,DST
+	lea	si,SRC
+	mov	di,cx
+	mov	cx,COUNT/2
+	cld
+	rep	movsw
+	pop	si
+	pop	es
+
+	ENDIF
+
+	ENDIF
+
+	endm
+
+REAL	STRUC
+
+EXP	db	?
+SIGN	db	?
+MAN	dw	?
+
+REAL	ENDS
+
+VECTOR	STRUC
+
+X	db	(type REAL) dup (?)
+Y	db	(type REAL) dup (?)
+Z	db	(type REAL) dup (?)
+
+VECTOR	ENDS
+
+PRIMITIVE	STRUC
+
+Kind		db	2 dup (?)
+Texture		dw	?
+Bump		db	2 dup (?)
+Surface		db	2 dup (?)
+Sgn		dw	?
+Rotation	db	2 dup (?)
+Highlight	db	(type REAL) dup (?)
+Refrate		db	(type REAL) dup (?)
+Param		db	(type VECTOR) dup (?)
+Offst		db	(type VECTOR) dup (?)
+Matrix		dw	?
+Solid		db	(type VECTOR) dup (?)
+SH		dw	?
+RU		dw	?
+RD		dw	?
+LU		dw	?
+LD		dw	?
+
+PRIMITIVE	ENDS
+
+N		equ	Refrate
+Absorb		equ	Solid
+
+RANGER		STRUC
+
+Direction	db	(type VECTOR) dup (?)
+Mincos		db	(type REAL) dup (?)
+Location	db	(type VECTOR) dup (?)
+Radius		db	(type REAL) dup (?)
+
+RANGER		ENDS
+
+ENVIRONMENT	STRUC
+
+RV		db	(type VECTOR) dup (?)
+RO		db	(type VECTOR) dup (?)
+RE		db	(type VECTOR) dup (?)
+RSIDE		dw	?
+RRCT		dw	?
+RPRIM		dw	?
+RNET		dw	?
+
+ENVIRONMENT	ENDS
+
+@DATAU	SEGMENT
+
+	extrn	USERTEXT	:  WORD
+	extrn	BUMPING		:  WORD
+	extrn	ANDLISTS	:  WORD
+	extrn	XSTART		:  WORD
+	extrn	XSTOP		:  WORD
+	extrn	YSTART		:  WORD
+	extrn	YSTOP		:  WORD
+	extrn	STEP		:  WORD
+	extrn	SRED		:  WORD
+	extrn	SGRN		:  WORD
+	extrn	SBLU		:  WORD
+	extrn	CUBEX		:  WORD
+	extrn	FRONT		:  WORD
+	extrn	REAR		:  WORD
+	extrn	SIDE		:  WORD
+	extrn	RCT		:  WORD
+	extrn	PRIM		:  WORD
+	extrn	ISPRIM		:  WORD
+	extrn	DFP		:  WORD
+	extrn	NETWORKS	:  BYTE
+	extrn	PR		:  BYTE		; Primitive
+	extrn	RANG		:  BYTE		; Range primitive
+	extrn	SHADOWIN	:  BYTE		; Boolean
+	extrn	MONITOR		:  BYTE		; Boolean
+	extrn	VIEWPT		:  BYTE		; Vector
+	extrn	LIGHT		:  BYTE		; Vector
+	extrn	EH		:  BYTE		; Vector
+	extrn	EV		:  BYTE		; Vector
+	extrn	TOSCR		:  BYTE		; Vector
+	extrn	PRED		:  BYTE		; Array of char
+	extrn	PGRN		:  BYTE		; Array of char
+	extrn	PBLU		:  BYTE		; Array of char
+	extrn	RESERVE		:  BYTE		; Environment
+	extrn	FIRST		:  BYTE		; Boolean
+	extrn	V		:  BYTE		; Vector
+	extrn	O		:  BYTE		; Vector
+	extrn	PNT		:  BYTE		; Vector
+	extrn	NML		:  BYTE		; Vector
+	extrn	COL		:  BYTE		; Vector
+	extrn	CRSPNT		:  BYTE		; Vector
+	extrn	CO		:  BYTE		; Real
+	extrn	T		:  BYTE		; Real
+	extrn	MINENERG	:  BYTE		; Real
+	extrn	BACKGROU	:  BYTE		; Real
+	extrn	INVBG		:  BYTE		; Real
+	extrn	GRADE		:  BYTE		; Real
+	extrn	DESNAME		:  BYTE
+
+@DATAU	ENDS
+
+@DATAC	SEGMENT
+
+	extrn	DATASEG		:  WORD
+	extrn	SEGTABLE	:  WORD
+	extrn	MAXRAY		:  WORD
+	extrn	MAXREFCT	:  WORD
+	extrn	MAXDIVCT	:  WORD
+	extrn	XOFFSET		:  WORD
+	extrn	YOFFSET		:  WORD
+
+@DATAC	ENDS
+
+NORANGE		EQU	99
+MAXPRIM		EQU	128
+MaxAndList	EQU	128
+MaxPrimInAL	EQU	5		; log of 2
+MaxOrList	EQU	5		; log of 2
+MaxALinOL	EQU	16
+MAXRANGE	EQU	MaxOrList
+MAXNET		EQU	3
+MAXUTEX		EQU	10
+MAXBUMP		EQU	10
+USRTXTOFST	EQU	10
+STDTXTNUM	EQU	5
+
+	.LIST
+
