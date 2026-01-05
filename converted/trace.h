@@ -273,4 +273,3 @@ void fprintvector(FILE *fp, const char *message, const vector *v);
                 END OF HEADER
 
 **********************************************/
-

@@ -127,7 +127,7 @@ int main() {
     test_comp(-8, -0.125);
     test_comp(-4, 0.125);
     test_comp(-432, 32);
-    
+
     int a, b;
 #define MAG 32768
     for (a=0; a<MAG; a++) {

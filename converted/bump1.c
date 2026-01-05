@@ -7,7 +7,7 @@ static uint16_t rand(uint16_t *);
 
 void bumptile(Primitive *p, vector *dir, vector *vp, vector *pnt)
 {
-    real oct = {-3,0,0x8000};		/* 1/8 */
+    real oct = {-3,0,0x8000};           /* 1/8 */
     real w1, w2;
     uint16_t i1, i2, i3;
 
@@ -35,7 +35,7 @@ static uint16_t rand(uint16_t *x)
 {
     int i;
     for (i=0; i<7; i++)
-	    *x = *x * 8009 + 31957;
+            *x = *x * 8009 + 31957;
     return *x;
 }
 
