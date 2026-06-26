@@ -225,6 +225,16 @@ void input(int argc, char *argv[])
             fgets(s,255,stdin);
             for(cp = s; iswhite(*cp); cp++);
             sscanf(cp,"%d",&shadowing);
+            printf("Subpixel 1-4 : ");
+            subdiv = 1;
+            fgets(s,255,stdin);
+            for(cp = s; iswhite(*cp); cp++);
+            sscanf(cp,"%d",&subdiv);
+            printf("Verbose 0-31 : ");
+            verbose=0;
+            fgets(s,255,stdin);
+            for(cp = s; iswhite(*cp); cp++);
+            sscanf(cp,"%d",&verbose);
             putchar('\n');
             fflush(stdout);
     }
@@ -233,6 +243,7 @@ void input(int argc, char *argv[])
                    xstart, xstop, ystart, ystop, step);
             printf("Monitor   (%s)\n",monitor ? "ON" : "OFF");
             printf("Shadowing (%s)\n",shadowing ? "ON" : "OFF");
+            printf("Subpixel  (%d)\n",subdiv);
             printf("X : Y  ==  1.000 : %5.3f\n",ratio);
             fflush(stdout);
     }
